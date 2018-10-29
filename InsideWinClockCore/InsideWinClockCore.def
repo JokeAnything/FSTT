@@ -1,0 +1,4 @@
+LIBRARY InsideWinClockCore
+EXPORTS
+LoadCoreModuleForWinClock
+UnloadCoreModuleFromWinClock

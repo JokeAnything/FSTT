@@ -1,0 +1,14 @@
+LIBRARY DataPoolImpl
+EXPORTS
+InitializeDataPool
+DestroyDataPool
+UpdateDataPool
+GetGMTNetworkTime
+GetMachineHoldOnTickCount
+RegisterTimeRingNotifyRoutine
+UnregisterTimeRingNotifyRoutine
+GetMainConfigInfoDataEntry
+SetMainConfigInfoDataEntry
+QueryIsApplicationAutoRun
+ConfigureStartupRunning
+LoggingDebugStream
