@@ -98,6 +98,7 @@ BOOL	WINAPI GetConfigurationFromRegister()
 		stMCID.dwIsStartupRunning = 1;
 		stMCID.dwIsSWWorkTimeOnTaskbar = 1;
 		stMCID.dwIsTimeRing = 1;
+		stMCID.dwIsAdjustLTToNTAuto = 1;
 		bIsDefault = TRUE;
 		bIsOK = TRUE;
 		AddDbgPrintStream(DBGFMTMSG(L"Retrieved configuration information exception,returned default information!"), CURTID, USERMODE, FUNCNAME(L"GetConfigurationFromRegister"), DBG_WARNING);
@@ -215,6 +216,10 @@ BOOL WINAPI SetMainConfigInfoDataEntry(PMAIN_CONFIG_INFO_DATAENTRY pMCIDE, DWORD
 	else if (0 != (dwSetFieldFlag&MAIN_CONFIG_INFO_SWWORKTIMETSBAR_FIELD))
 	{
 		g_MainConfigInfoDataEntry.dwIsSWWorkTimeOnTaskbar = pMCIDE->dwIsSWWorkTimeOnTaskbar;
+	}
+	else if (0 != (dwSetFieldFlag&MAIN_CONFIG_INFO_ADJUST_LT_TO_NT))
+	{
+		g_MainConfigInfoDataEntry.dwIsAdjustLTToNTAuto = pMCIDE->dwIsAdjustLTToNTAuto;
 	}
 	else
 	{

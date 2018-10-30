@@ -18,10 +18,12 @@ BOOL WINAPI DestroyNetworkTimeDataEntry()
 	if (NULL != g_hNetworkTimeThread)
 	{
 		g_bIsExitThread = TRUE;
+		AddDbgPrintStream(DBGFMTMSG(L"Now request network time component thread to exit."), CURTID, USERMODE, FUNCNAME(L"DestroyNetworkTimeDataEntry"), DBG_TIPS);
 		QueueUserAPC((PAPCFUNC)DummyAPCProc, g_hNetworkTimeThread, (ULONG_PTR)NULL);
 		dwStatus = WaitForSingleObject(g_hNetworkTimeThread, MAX_SLEEP_MILLISECOND_VALUE_LEVEL1);
 		if (WAIT_TIMEOUT == dwStatus)
 		{
+			AddDbgPrintStream(DBGFMTMSG(L"Network time component thread exited manner extreme!"), CURTID, USERMODE, FUNCNAME(L"DestroyNetworkTimeDataEntry"), DBG_WARNING);
 			//Asyn to terminate thread,extreme case.
 			TerminateThread(g_hNetworkTimeThread, 0);
 			WaitForSingleObject(g_hNetworkTimeThread, MAX_SLEEP_MILLISECOND_VALUE_LEVEL1);
@@ -102,6 +104,7 @@ DWORD WINAPI WorkThreadProc(LPVOID lpParameter)
 	DWORD			dwFailedCount = 0;
 	DWORD			dwWaitMillisecond = MAX_SLEEP_MILLISECOND_FAILBASE;
 	SYSTEMTIME		stSysTime;
+	static  DWORD   dwStaticCnt = 0;
 
 	while (!g_bIsExitThread)
 	{
@@ -139,6 +142,15 @@ DWORD WINAPI WorkThreadProc(LPVOID lpParameter)
 			}
 		}
 		SleepEx(MAX_SLEEP_MILLISECOND_VALUE_LEVEL4, TRUE);
+		dwStaticCnt++;
+		if (dwStaticCnt >= 20) // MAX_SLEEP_MILLISECOND_VALUE_LEVEL4*20 == 15000*4*5 = 5 minute
+		{
+			dwStaticCnt = 0;
+			RequestAccessDataEntryToken();
+			//Get network time again.
+			g_NetworkTimeDataEntry.bIsGMTTimeValid = 0;
+			ReleaseAccessDataEntryToken();
+		}
 	}
 	return 1;
 }

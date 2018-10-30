@@ -77,8 +77,8 @@ BOOL WINAPI GetNextRingGMTTime(PSYSTEMTIME lpSysTime,PDWORD pdwTimeRingNotifyFla
 			stTempSysTime.wMilliseconds = 0;
 			*lpSysTime = stTempSysTime;
 			*pdwTimeRingNotifyFlag = stTempSysTime.wMinute / RING_TIME_PERIOD_MINUTE;
-			AddDbgPrintStream(DBGFMTMSG(L"Set next time ring at -%02d:%02d:%02d"), CURTID, USERMODE, FUNCNAME(L"GetNextRingGMTTime"), DBG_TIPS,
-				stTempSysTime.wHour, stTempSysTime.wMinute, stTempSysTime.wSecond);
+//			AddDbgPrintStream(DBGFMTMSG(L"Set next time ring at -%02d:%02d:%02d"), CURTID, USERMODE, FUNCNAME(L"GetNextRingGMTTime"), DBG_TIPS,
+//				stTempSysTime.wHour, stTempSysTime.wMinute, stTempSysTime.wSecond);
 			break;
 		}
 	}
@@ -124,7 +124,7 @@ BOOL WINAPI SetTimeRingNotifyTimer()
 		g_TimeRingNotifyDataEntry.stGMT_LastSetTime = stTempSysTime;
 		g_TimeRingNotifyDataEntry.dwTimeRingNotifyFlag = dwTempTimeRingNotifyFlag;
 		ReleaseAccessDataEntryToken();
-		AddDbgPrintStream(DBGFMTMSG(L"Set time ring successfully!"), CURTID, USERMODE, FUNCNAME(L"SetTimeRingNotifyTimer"), DBG_TIPS);
+//		AddDbgPrintStream(DBGFMTMSG(L"Set time ring successfully!"), CURTID, USERMODE, FUNCNAME(L"SetTimeRingNotifyTimer"), DBG_TIPS);
 	}
 	else
 	{
@@ -232,8 +232,8 @@ VOID WINAPI NotifyTimeRingEvent()
 	{
 		return;
 	}
-	AddDbgPrintStream(DBGFMTMSG(L"Call callback function to notify-Music id = %d !"), CURTID, USERMODE, FUNCNAME(L"NotifyTimeRingEvent"),
-		DBG_TIPS, dwTempTimeRingNotifyFlag);
+//	AddDbgPrintStream(DBGFMTMSG(L"Call callback function to notify-Music id = %d !"), CURTID, USERMODE, FUNCNAME(L"NotifyTimeRingEvent"),
+//		DBG_TIPS, dwTempTimeRingNotifyFlag);
 	lpFnProc(dwTempTimeRingNotifyFlag);
 	return;
 }

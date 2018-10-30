@@ -2,6 +2,16 @@
 #include <windows.h>
 #include "DEDeclaration.h"
 
+#if defined	(_WIN64)
+
+#pragma comment(lib, "..\\iWorkTime\\x64\\Debug\\DataPoolImpl.lib")
+
+#else
+
+#pragma comment(lib, "..\\iWorkTime\\Debug\\DataPoolImpl.lib")
+
+#endif
+
 #define		DLL_FN_DESCRIPTOR	__declspec(dllimport)
 
 

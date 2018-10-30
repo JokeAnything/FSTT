@@ -1,4 +1,10 @@
 #include "iWorkTime.h"
+
+//#include "system/RCProcessCreator.h"
+//#include "system/RCSystemUtils.h"
+//#include "web/post/RCWebPost.h"
+//#include "utils/RCBrowserInvoker.h"
+
 INT  WINAPI WinMain(HINSTANCE hInstance, HINSTANCE lpPreInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	MSG					stMsg;
@@ -10,6 +16,8 @@ INT  WINAPI WinMain(HINSTANCE hInstance, HINSTANCE lpPreInstance, LPSTR lpCmdLin
 	WPARAM				wParam = 0;
 	BOOL				bIsOK = FALSE;
 	LPTOP_LEVEL_EXCEPTION_FILTER  lpFNExceptionPtr;
+
+    SpawnWebDataSynImplApp();
 
 	bIsWow64 = IsX86RunningOnX64();
 	if (TRUE == bIsWow64)
@@ -120,6 +128,10 @@ INT_PTR CALLBACK WinDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		else if (TASKBAR_TIME_UPDATE_TIMER_ID == nTimerID)
 		{
 			RefreshWinClockWndAsyn();
+		}
+		else if (ADJUST_LT_TO_NT_TIMER_ID == nTimerID)
+		{
+			AdjustLTToNTAuto(hwndDlg);
 		}
 		return FALSE;
 	}
@@ -253,6 +265,7 @@ VOID WINAPI ExitApplication(HWND hwndDlg)
 		SetWindowLongPtr(hCtrlBmpWnd, GWLP_WNDPROC, (LONG_PTR)g_lpSWTASKBARBMPStaticCtrlProc);
 	}
 	InsideWinClockModuleControl(FALSE, hwndDlg);
+	KillTimer(hwndDlg, ADJUST_LT_TO_NT_TIMER_ID);
 	KillTimer(hwndDlg, NETWORK_TIME_UPDATE_TIMER_ID);
 //	DestroyDataPool();
 	return;
@@ -294,6 +307,12 @@ BOOL WINAPI Respond_InitDlgWnd_Msg(HWND hwndDlg, WPARAM wParam, LPARAM lParam)
 		if (BST_CHECKED == uCheckFlag)
 		{
 			RegisterTimeRingNotifyRoutine((PVOID)TimeRingNotificationProc);
+		}
+		1 == stMCID.dwIsAdjustLTToNTAuto ? (uCheckFlag = BST_CHECKED) : (uCheckFlag = BST_UNCHECKED);
+		CheckDlgButton(hwndDlg, IDC_CHECK_AUTOADJUSTTIME, uCheckFlag);
+		if (BST_CHECKED == uCheckFlag)
+		{
+			SetTimer(hwndDlg, ADJUST_LT_TO_NT_TIMER_ID, ADJUST_LT_TO_NT_UPDATE_CYCLE, NULL);
 		}
 	}
 	SetTimer(hwndDlg, NETWORK_TIME_UPDATE_TIMER_ID, NETWORK_TIME_UPDATE_CYCLE,NULL);
@@ -487,8 +506,25 @@ BOOL WINAPI Respond_CommandDlgWnd_Msg(HWND	hwndDlg, WPARAM	wParam, LPARAM lParam
 		}
 		SetMainConfigInfoDataEntry(&stMCID, MAIN_CONFIG_INFO_TIMERING_FIELD);
 	}
+	else if (LOWORD(wParam) == IDC_CHECK_AUTOADJUSTTIME && HIWORD(wParam) == BN_CLICKED)
+	{
+		uBtnState = IsDlgButtonChecked(hwndDlg, IDC_CHECK_AUTOADJUSTTIME);
+		if (BST_CHECKED == uBtnState)
+		{
+			SetTimer(hwndDlg, ADJUST_LT_TO_NT_TIMER_ID, ADJUST_LT_TO_NT_UPDATE_CYCLE, NULL);
+			stMCID.dwIsAdjustLTToNTAuto = (DWORD)1;
+		}
+		else
+		{
+			//BST_UNCHECKED
+			KillTimer(hwndDlg, ADJUST_LT_TO_NT_TIMER_ID);
+			stMCID.dwIsAdjustLTToNTAuto = (DWORD)0;
+		}
+		SetMainConfigInfoDataEntry(&stMCID, MAIN_CONFIG_INFO_ADJUST_LT_TO_NT);
+	}
 	return FALSE;
 }
+
 VOID WINAPI UpdateHoldRealTime(HWND hDlgWnd)
 {
 	BOOL bIsOK;
@@ -504,6 +540,7 @@ VOID WINAPI UpdateHoldRealTime(HWND hDlgWnd)
 	}
 	return;
 }
+
 
 BOOL WINAPI GetMachineRunningTimeToString(PWCHAR pszStrBuff, INT nMaxCharLen)
 {
@@ -551,6 +588,30 @@ BOOL WINAPI FormatMachineRunningTimeText(DWORD dwTotalSecHighPart, DWORD dwTotal
 	}
 	return FALSE;
 }
+
+VOID WINAPI AdjustLTToNTAuto(HWND hDlgWnd)
+{
+	BOOL		bIsOK;
+	BOOL		bIsLocalTime;
+	SYSTEMTIME	stSysTime;
+
+	if (NULL == hDlgWnd)
+	{
+		return;
+	}
+	bIsOK = GetGMTNetworkTime(&stSysTime, &bIsLocalTime);
+	if (FALSE == bIsOK)
+	{
+		return;
+	}
+	if (TRUE == bIsLocalTime)
+	{
+		return;
+	}
+	SetSystemTime(&stSysTime);
+	return;
+}
+
 VOID WINAPI UpdateLocalRealTime(HWND hDlgWnd)
 {
 	SYSTEMTIME	stLocalTime;
@@ -560,7 +621,7 @@ VOID WINAPI UpdateLocalRealTime(HWND hDlgWnd)
 		return;
 	}
 	GetLocalTime(&stLocalTime);
-	StringCchPrintf(szFmtBuffer, sizeof(szFmtBuffer) / sizeof(WCHAR), L"%d/%d/%d %02d:%02d:%02d",
+	StringCchPrintf(szFmtBuffer, sizeof(szFmtBuffer) / sizeof(WCHAR), L"%d/%02d/%02d %02d:%02d:%02d",
 		stLocalTime.wYear,
 		stLocalTime.wMonth,
 		stLocalTime.wDay,
@@ -599,7 +660,7 @@ VOID WINAPI UpdateNetworkRealTime(HWND hDlgWnd)
 		SendMessage(GetDlgItem(hDlgWnd, IDC_STATIC_NETWORKRTIME), WM_SETTEXT, 0, (LPARAM)NETWORK_DEFAULT_TEXT);
 		return;
 	}
-	StringCchPrintf(szFmtBuffer, sizeof(szFmtBuffer)/sizeof(WCHAR), L"%d/%d/%d %02d:%02d:%02d",
+	StringCchPrintf(szFmtBuffer, sizeof(szFmtBuffer)/sizeof(WCHAR), L"%d/%02d/%02d %02d:%02d:%02d",
 		stLocalTime.wYear,
 		stLocalTime.wMonth,
 		stLocalTime.wDay,
@@ -640,4 +701,36 @@ BOOL WINAPI IsX86RunningOnX64()
 		}
 	}
 	return bIsWow64;
+}
+
+BOOL WINAPI SpawnWebDataSynImplApp()
+{
+    BOOL				bIsSpawnPsOK;
+    WCHAR				szCmdLine[MAX_PATH];
+    STARTUPINFO			stSI;
+    PROCESS_INFORMATION stPI;
+
+    //Command line.current direcoty.
+    StringCchPrintf(szCmdLine, MAX_PATH, L"%s", SPAWN_PSNAME);
+    RtlZeroMemory(&stSI, sizeof(STARTUPINFO));
+    stSI.cb = sizeof(STARTUPINFO);
+    RtlZeroMemory(&stPI, sizeof(PROCESS_INFORMATION));
+    bIsSpawnPsOK = CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &stSI, &stPI);
+    if (bIsSpawnPsOK == FALSE || stPI.hProcess == NULL)
+    {
+        //		AddDbgPrintStream(DBGFMTMSG(L"WebDataSynImplApp application started NG."), CURTID, USERMODE, FUNCNAME(L"WinDlgProc"), DBG_ERROR);
+        return FALSE;
+    }
+    if (stPI.hProcess != NULL)
+    {
+        CloseHandle(stPI.hProcess);
+        stPI.hProcess = NULL;
+    }
+    if (stPI.hThread != NULL)
+    {
+        CloseHandle(stPI.hThread);
+        stPI.hThread = NULL;
+    }
+    //	AddDbgPrintStream(DBGFMTMSG(L"WebDataSynImplApp application started OK."), CURTID, USERMODE, FUNCNAME(L"WinDlgProc"), DBG_TIPS);
+    return TRUE;
 }

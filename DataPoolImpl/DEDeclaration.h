@@ -14,12 +14,14 @@
 #define		MAIN_CONFIG_INFO_STARTUPRUNNING_FIELD     (0x1)
 #define		MAIN_CONFIG_INFO_TIMERING_FIELD		      (0x2)
 #define     MAIN_CONFIG_INFO_SWWORKTIMETSBAR_FIELD    (0x4)
+#define     MAIN_CONFIG_INFO_ADJUST_LT_TO_NT          (0x8)
 
 typedef	struct _MAIN_CONFIG_INFO_DATAENTRY
 {
 	DWORD			dwIsStartupRunning;
 	DWORD			dwIsTimeRing;
 	DWORD           dwIsSWWorkTimeOnTaskbar;
+	DWORD			dwIsAdjustLTToNTAuto;
 	ULONG_PTR		ptrReserve;
 }MAIN_CONFIG_INFO_DATAENTRY,*PMAIN_CONFIG_INFO_DATAENTRY;
 

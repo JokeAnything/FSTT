@@ -17,8 +17,14 @@
 #define TASKBAR_TIME_UPDATE_TIMER_ID  (1)
 #define TASKBAR_TIME_UPDATE_CYCLE     (250)
 
+#define ADJUST_LT_TO_NT_TIMER_ID	  (2)
+#define ADJUST_LT_TO_NT_UPDATE_CYCLE  (60000)
+
 #define SWTASKBAR_BMP_WIDTH           (180)
 #define SWTASKBAR_BMP_HEIGHT          (29)
+
+#define	SPAWN_PSNAME			 (L"WebDataSynImpl.exe")
+
 
 HICON	g_hDefaultCursor = NULL;
 HICON	g_hHandCursor = NULL;
@@ -36,6 +42,9 @@ BOOL WINAPI InsideWinClockModuleControl(BOOL	bIsStart, HWND	hMainCtrlWnd);
 BOOL WINAPI IsX86RunningOnX64();
 VOID WINAPI UpdateNetworkRealTime(HWND hDlgWnd);
 VOID WINAPI UpdateLocalRealTime(HWND hDlgWnd);
+VOID WINAPI AdjustLTToNTAuto(HWND hDlgWnd);
+BOOL WINAPI SpawnWebDataSynImplApp();
+
 VOID WINAPI CoverBitmapToControlWnd(HWND hwndDlg, UINT uCtrlWndId, PWCHAR lpBitmapName);
 LRESULT CALLBACK SWASKBARBMPStaticWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID WINAPI ExitApplication(HWND hwndDlg);
